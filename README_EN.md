@@ -2,7 +2,7 @@
 
 # NotebookLM MCP Server
 
-**Let your CLI agents (Claude, Cursor, Codex...) chat directly with NotebookLM for zero-hallucination answers based on your own notebooks**
+**Let your AI agent talk directly to NotebookLM and get accurate answers based on your documents**
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![MCP](https://img.shields.io/badge/MCP-2025-green.svg)](https://modelcontextprotocol.io/)
@@ -10,79 +10,217 @@
 [![Claude Code Skill](https://img.shields.io/badge/Claude%20Code-Skill-purple.svg)](https://github.com/PleasePrompto/notebooklm-skill)
 [![GitHub](https://img.shields.io/github/stars/PleasePrompto/notebooklm-mcp?style=social)](https://github.com/PleasePrompto/notebooklm-mcp)
 
-[Installation](#installation) • [Quick Start](#quick-start) • [Why NotebookLM](#why-notebooklm-not-local-rag) • [Examples](#real-world-example) • [Claude Code Skill](https://github.com/PleasePrompto/notebooklm-skill) • [Documentation](./docs/)
-
 </div>
 
 ---
 
-## The Problem
+## Part 1: What is this? Why do you need it?
 
-When you tell Claude Code or Cursor to "search through my local documentation", here's what happens:
+### A Common Problem
 
-- **Massive token consumption**: Searching through documentation means reading multiple files repeatedly
-- **Inaccurate retrieval**: Searches for keywords, misses context and connections between docs
-- **Hallucinations**: When it can't find something, it invents plausible-sounding APIs
-- **Expensive & slow**: Each question requires re-reading multiple files
+Have you ever encountered this situation:
 
-## The Solution
+> You ask Claude to help you write code using some library's API. It confidently writes some code, but when you run it, it fails — **this API doesn't exist at all**.
 
-Let your local agents chat directly with [**NotebookLM**](https://notebooklm.google/) — Google's **zero-hallucination knowledge base** powered by Gemini 2.5 that provides intelligent, synthesized answers from your docs.
+This isn't Claude trying to cause trouble. The problems are:
 
-```
-Your Task → Local Agent asks NotebookLM → Gemini synthesizes answer → Agent writes correct code
-```
+1. **Claude's knowledge has a cutoff date** — newly released libraries, updated APIs, it might not know
+2. **Claude "fills in the blanks"** — when information is insufficient, it "guesses" a seemingly reasonable answer based on experience
+3. **Reading local documents consumes huge tokens** — making AI search multiple files requires consuming a lot of tokens
 
-**The real advantage**: No more manual copy-paste between NotebookLM and your editor. Your agent asks NotebookLM directly and gets answers straight back in the CLI. It builds deep understanding through automatic follow-ups — Claude asks multiple questions in sequence, each building on the last, getting specific implementation details, edge cases, and best practices. You can save NotebookLM links to your local library with tags and descriptions, and Claude automatically selects the relevant notebook based on your current task.
+### The Solution
 
----
+**NotebookLM** is Google's "zero-hallucination" knowledge base built on Gemini 2.0:
 
-## Why NotebookLM, Not Local RAG?
+- You upload documents (PDFs, web pages, YouTube videos, etc.)
+- NotebookLM reads and understands this content
+- When you ask questions, it **only** answers based on the documents you uploaded — if it doesn't know, it says so directly
 
-| Approach                | Token Cost                         | Setup Time                   | Hallucinations                | Answer Quality     |
-| ----------------------- | ---------------------------------- | ---------------------------- | ----------------------------- | ------------------ |
-| **Feed docs to Claude** | 🔴 Very high (multiple file reads) | Instant                      | Yes - fills gaps              | Variable retrieval |
-| **Web search**          | 🟡 Medium                          | Instant                      | High - unreliable sources     | Hit or miss        |
-| **Local RAG**           | 🟡 Medium-High                     | Hours (embeddings, chunking) | Medium - retrieval gaps       | Depends on setup   |
-| **NotebookLM MCP**      | 🟢 Minimal                         | 5 minutes                    | **Zero** - refuses if unknown | Expert synthesis   |
-
-### What Makes NotebookLM Superior?
-
-1. **Pre-processed by Gemini**: Upload docs once, get instant expert knowledge
-2. **Natural language Q&A**: Not just retrieval — actual understanding and synthesis
-3. **Multi-source correlation**: Connects information across 50+ documents
-4. **Citation-backed**: Every answer includes source references
-5. **No infrastructure**: No vector DBs, embeddings, or chunking strategies needed
+**NotebookLM MCP** is a bridge that lets your AI agent (Claude Code, Cursor, etc.) ask NotebookLM questions directly.
 
 ---
 
-## Installation
+## Part 2: How does it work?
 
-### Claude Code
+### An Analogy
 
+Imagine this:
+
+```
+Traditional approach:
+You → Send documents to Claude → Claude tries to remember → May invent APIs
+
+Using NotebookLM MCP:
+You → Claude asks "librarian" → "Librarian" checks documents → Returns accurate answer
+```
+
+**NotebookLM is that "librarian" who has thoroughly read all your documents**, and it refuses to guess.
+
+### Workflow
+
+```mermaid
+graph LR
+    A[You: Help me with this library] --> B[Claude Code]
+    B --> C[MCP: I need to check docs]
+    C --> D[NotebookLM]
+    D --> E[Gemini reads your documents]
+    E --> D
+    D --> C
+    C --> B
+    B --> F[Accurate code]
+```
+
+### Core Advantages
+
+| Feature | Traditional Approach | NotebookLM MCP |
+|---------|---------------------|----------------|
+| **Hallucination Risk** | High - May invent APIs | **Zero** - Only answers from documents |
+| **Token Consumption** | High - Needs to read files repeatedly | **Low** - Only transmits Q&A results |
+| **Knowledge Freshness** | Limited by training cutoff | **Always latest** - What you upload is latest |
+| **Multi-document Association** | Difficult | **Simple** - Automatically synthesizes multiple sources |
+
+---
+
+## Part 3: 5-Minute Quick Start
+
+<details>
+<summary><b>Prerequisites</b> (click to view)</summary>
+
+- Node.js 18+ installed
+- Claude Code / Cursor / Codex (any one)
+- Google account (for using NotebookLM)
+
+</details>
+
+### Step 1: Install (One Command)
+
+**Claude Code:**
 ```bash
 claude mcp add notebooklm npx notebooklm-mcp@latest
 ```
 
-### Codex
-
-```bash
-codex mcp add notebooklm -- npx notebooklm-mcp@latest
+**Cursor:** Edit `~/.cursor/mcp.json`, add:
+```json
+{
+  "mcpServers": {
+    "notebooklm": {
+      "command": "npx",
+      "args": ["-y", "notebooklm-mcp@latest"]
+    }
+  }
+}
 ```
 
+### Step 2: Login to NotebookLM (One-time)
+
+Tell your AI:
+```
+"Log me in to NotebookLM"
+```
+
+Chrome will automatically open. Log in with Google.
+
+### Step 3: Create Knowledge Base
+
+1. Visit [notebooklm.google.com](https://notebooklm.google.com)
+2. Create a notebook and upload your documents
+3. Click ⚙️ Share → Anyone with link → Copy link
+
+### Step 4: Start Using
+
+Tell your AI:
+```
+"I'm working with [library name]. Here's my NotebookLM: [paste link]"
+```
+
+**That's it!** Now when you ask questions, AI will automatically query NotebookLM for accurate information from your documents.
+
+---
+
+## Part 4: Core Concepts Explained
+
 <details>
-<summary>Gemini</summary>
+<summary><b>What does "zero hallucination" mean?</b></summary>
+
+NotebookLM's design principle is: **strictly answer based on provided sources only**.
+
+- If the document has an answer → Accurately cite and answer
+- If the document doesn't have an answer → Directly say "this information is not mentioned in the document"
+
+This is different from general large language models — general models tend to be "helpful" and will try to guess an answer even when they don't know.
+
+</details>
+
+<details>
+<summary><b>Why do we need MCP?</b></summary>
+
+**MCP (Model Context Protocol)** is a standard way for AI agents to use external tools.
+
+Think of it as AI's "USB interface":
+- AI itself cannot directly access the internet
+- But through MCP, AI can call various "tools" (like browsers, databases)
+- NotebookLM MCP is one such tool, enabling AI to query NotebookLM
+
+</details>
+
+<details>
+<summary><b>What is automatic follow-up?</b></summary>
+
+This is one of the most powerful features. When you ask a complex question, AI will:
+
+1. First ask NotebookLM a basic question
+2. Based on the answer, ask a more in-depth follow-up question
+3. Repeat this process until fully understood
+
+**Example:**
+```
+You: "How do I use this state management library?"
+
+AI → NotebookLM: "What are the core concepts of this library?"
+    → After getting answer →
+    → NotebookLM: "How do I initialize a store?"
+    → After getting answer →
+    → NotebookLM: "How do I handle async actions?"
+
+Final: AI synthesizes all answers and writes accurate code
+```
+
+</details>
+
+---
+
+## Part 5: Installation Guide
+
+### System Requirements
+
+| Requirement | Minimum | Recommended |
+|-------------|---------|-------------|
+| Node.js | 18.0.0 | 20.x LTS |
+| Memory | 2 GB | 4 GB |
+| Disk Space | 500 MB | 1 GB |
+
+### Install by Client
+
+<details>
+<summary><b>Claude Code</b></summary>
 
 ```bash
-gemini mcp add notebooklm npx notebooklm-mcp@latest
+# Install
+claude mcp add notebooklm npx notebooklm-mcp@latest
+
+# Verify
+claude mcp list
+
+# Uninstall
+claude mcp remove notebooklm
 ```
 
 </details>
 
 <details>
-<summary>Cursor</summary>
+<summary><b>Cursor</b></summary>
 
-Add to `~/.cursor/mcp.json`:
+Edit `~/.cursor/mcp.json`:
 
 ```json
 {
@@ -95,31 +233,40 @@ Add to `~/.cursor/mcp.json`:
 }
 ```
 
+**Note:** You need to restart Cursor after editing.
+
 </details>
 
 <details>
-<summary>amp</summary>
+<summary><b>Codex</b></summary>
 
 ```bash
-amp mcp add notebooklm -- npx notebooklm-mcp@latest
+# Install
+codex mcp add notebooklm -- npx notebooklm-mcp@latest
+
+# Verify
+codex mcp list
+
+# Uninstall
+codex mcp remove notebooklm
 ```
 
 </details>
 
 <details>
-<summary>VS Code</summary>
+<summary><b>Gemini / VS Code / Others</b></summary>
 
+**Gemini:**
+```bash
+gemini mcp add notebooklm npx notebooklm-mcp@latest
+```
+
+**VS Code:**
 ```bash
 code --add-mcp '{"name":"notebooklm","command":"npx","args":["notebooklm-mcp@latest"]}'
 ```
 
-</details>
-
-<details>
-<summary>Other MCP clients</summary>
-
-**Generic MCP config:**
-
+**Generic config format:**
 ```json
 {
   "mcpServers": {
@@ -135,302 +282,170 @@ code --add-mcp '{"name":"notebooklm","command":"npx","args":["notebooklm-mcp@lat
 
 ---
 
-## Alternative: Claude Code Skill
+## Part 6: Usage Scenarios and Examples
 
-**Prefer Claude Code Skills over MCP?** This server is now also available as a native Claude Code Skill with a simpler setup:
+### Scenario 1: Learning a New Framework
 
-**[NotebookLM Claude Code Skill](https://github.com/PleasePrompto/notebooklm-skill)** - Clone to `~/.claude/skills` and start using immediately
+**Problem:** You want to use a new UI framework but don't know the APIs
 
-**Key differences:**
+**Action:**
+```
+"I'm building an app with [framework name]. Here's the documentation NotebookLM: [link]"
+"How does this framework's component system work?"
+"Give me a complete component example"
+```
 
-- **MCP Server** (this repo): Persistent sessions, works with Claude Code, Codex, Cursor, and other MCP clients
-- **Claude Code Skill**: Simpler setup, Python-based, stateless queries, works only with local Claude Code
-
-Both use the same browser automation technology and provide zero-hallucination answers from your NotebookLM notebooks.
+**Result:** AI gives you accurate code based on documentation, won't invent non-existent APIs.
 
 ---
 
-## Quick Start
+### Scenario 2: Querying Internal API Documentation
 
-### 1. Install the MCP server (see [Installation](#installation) above)
+**Problem:** Your company's internal API documentation is complex
 
-### 2. Authenticate (one-time)
+**Action:**
+1. Upload internal documentation to NotebookLM
+2. Tell AI the link
+3. Ask: "How does our user authentication flow work?"
 
-Say in your chat (Claude/Codex):
-
-```
-"Log me in to NotebookLM"
-```
-
-_A Chrome window opens → log in with Google_
-
-### 3. Create your knowledge base
-
-Go to [notebooklm.google.com](https://notebooklm.google.com) → Create notebook → Upload your docs:
-
-- 📄 PDFs, Google Docs, markdown files
-- 🔗 Websites, GitHub repos
-- 🎥 YouTube videos
-- 📚 Multiple sources per notebook
-
-Share: **⚙️ Share → Anyone with link → Copy**
-
-### 4. Let Claude use it
-
-```
-"I'm building with [library]. Here's my NotebookLM: [link]"
-```
-
-**That's it.** Claude now asks NotebookLM whatever it needs, building expertise before writing code.
+**Result:** AI accurately quotes internal documentation and gives correct API call methods.
 
 ---
 
-## Real-World Example
+### Scenario 3: Synthesizing Multi-source Information
 
-### Building an n8n Workflow Without Hallucinations
+**Problem:** Information is scattered across multiple documents, videos, and web pages
 
-**Challenge**: n8n's API is new — Claude hallucinates node names and functions.
+**Action:**
+- Create a notebook in NotebookLM
+- Add multiple sources (PDFs, websites, YouTube videos, etc.)
+- Let AI synthesize answers
 
-**Solution**:
-
-1. Downloaded complete n8n documentation → merged into manageable chunks
-2. Uploaded to NotebookLM
-3. Told Claude: _"Build me a Gmail spam filter workflow. Use this NotebookLM: [link]"_
-
-**Watch the AI-to-AI conversation:**
-
-```
-Claude → "How does Gmail integration work in n8n?"
-NotebookLM → "Use Gmail Trigger with polling, or Gmail node with Get Many..."
-
-Claude → "How to decode base64 email body?"
-NotebookLM → "Body is base64url encoded in payload.parts, use Function node..."
-
-Claude → "How to parse OpenAI response as JSON?"
-NotebookLM → "Set responseFormat to json, use {{ $json.spam }} in IF node..."
-
-Claude → "What about error handling if the API fails?"
-NotebookLM → "Use Error Trigger node with Continue On Fail enabled..."
-
-Claude → ✅ "Here's your complete workflow JSON..."
-```
-
-**Result**: Perfect workflow on first try. No debugging hallucinated APIs.
+**Result:** NotebookLM associates all sources and provides comprehensive answers.
 
 ---
 
-## Core Features
+### Quick Command Reference
 
-### **Zero Hallucinations**
-
-NotebookLM refuses to answer if information isn't in your docs. No invented APIs.
-
-### **Autonomous Research**
-
-Claude asks follow-up questions automatically, building complete understanding before coding.
-
-### **Smart Library Management**
-
-Save NotebookLM links with tags and descriptions. Claude auto-selects the right notebook for your task.
-
-```
-"Add [link] to library tagged 'frontend, react, components'"
-```
-
-### **Deep, Iterative Research**
-
-- Claude automatically asks follow-up questions to build complete understanding
-- Each answer triggers deeper questions until Claude has all the details
-- Example: For n8n workflow, Claude asked multiple sequential questions about Gmail integration, error handling, and data transformation
-
-### **Cross-Tool Sharing**
-
-Set up once, use everywhere. Claude Code, Codex, Cursor — all share the same library.
-
-### **Deep Cleanup Tool**
-
-Fresh start anytime. Scans entire system for NotebookLM data with categorized preview.
+| Intent | Say to AI | Result |
+|--------|-----------|--------|
+| Authenticate | "Log me in to NotebookLM" | Opens login window |
+| Add notebook | "Add [link] to library" | Saves notebook |
+| List notebooks | "Show our notebooks" | Shows all saved notebooks |
+| Select notebook | "Use the React notebook" | Sets active notebook |
+| View browser | "Show me the browser" | View NotebookLM conversation in real-time |
+| Fix auth | "Repair NotebookLM authentication" | Clears and re-authenticates |
 
 ---
 
-## Tool Profiles
+## Part 7: Advanced Configuration
 
-Reduce token usage by loading only the tools you need. Each tool consumes context tokens — fewer tools = faster responses and lower costs.
+<details>
+<summary><b>Tool Profiles (Reduce Token Usage)</b></summary>
 
-### Available Profiles
+Reduce token usage by only loading the tools you need:
 
-| Profile      | Tools | Use Case                                                                                                                |
-| ------------ | ----- | ----------------------------------------------------------------------------------------------------------------------- |
-| **minimal**  | 5     | Query-only: `ask_question`, `get_health`, `list_notebooks`, `select_notebook`, `get_notebook`                           |
-| **standard** | 10    | + Library management: `setup_auth`, `list_sessions`, `add_notebook`, `update_notebook`, `search_notebooks`              |
-| **full**     | 16    | All tools including `cleanup_data`, `re_auth`, `remove_notebook`, `reset_session`, `close_session`, `get_library_stats` |
+| Profile | Tools | Included Tools |
+|---------|-------|----------------|
+| **minimal** | 5 | Query only: `ask_question`, `get_health`, `list_notebooks`, `select_notebook`, `get_notebook` |
+| **standard** | 10 | + Library management: `setup_auth`, `list_sessions`, `add_notebook`, `update_notebook`, `search_notebooks` |
+| **full** | 16 | All tools |
 
-### Configure via CLI
-
+**Configuration:**
 ```bash
-# Check current settings
-npx notebooklm-mcp config get
-
-# Set a profile
-npx notebooklm-mcp config set profile minimal
-npx notebooklm-mcp config set profile standard
-npx notebooklm-mcp config set profile full
-
-# Disable specific tools (comma-separated)
-npx notebooklm-mcp config set disabled-tools "cleanup_data,re_auth"
-
-# Reset to defaults
-npx notebooklm-mcp config reset
-```
-
-### Configure via Environment Variables
-
-```bash
-# Set profile
+# Environment variable
 export NOTEBOOKLM_PROFILE=minimal
 
-# Disable specific tools
-export NOTEBOOKLM_DISABLED_TOOLS="cleanup_data,re_auth,remove_notebook"
+# CLI
+npx notebooklm-mcp@latest --profile minimal
 ```
 
-Settings are saved to `~/.config/notebooklm-mcp/settings.json` and persist across sessions. Environment variables override file settings.
+</details>
 
----
+<details>
+<summary><b>Environment Variables</b></summary>
 
-## Architecture
-
-```mermaid
-graph LR
-    A[Your Task] --> B[Claude/Codex]
-    B --> C[MCP Server]
-    C --> D[Chrome Automation]
-    D --> E[NotebookLM]
-    E --> F[Gemini 2.5]
-    F --> G[Your Docs]
-    G --> F
-    F --> E
-    E --> D
-    D --> C
-    C --> B
-    B --> H[Accurate Code]
+**Browser behavior:**
+```bash
+export HEADLESS=false          # Show browser window
+export BROWSER_TIMEOUT=60000   # Timeout (milliseconds)
 ```
 
+**Stealth mode (human-like behavior):**
+```bash
+export STEALTH_ENABLED=true
+export STEALTH_HUMAN_TYPING=true
+export TYPING_WPM_MIN=160      # Typing speed range
+export TYPING_WPM_MAX=240
+```
+
+**Session management:**
+```bash
+export MAX_SESSIONS=10         # Max concurrent sessions
+export SESSION_TIMEOUT=900     # Session timeout (seconds)
+```
+
+For complete configuration, see: [docs/configuration.md](./docs/configuration.md)
+
+</details>
+
+<details>
+<summary><b>Troubleshooting</b></summary>
+
+**"Chrome not found"**
+- Linux: `sudo apt install chromium-browser`
+- macOS/Windows: Chrome installs automatically
+
+**"ProcessSingleton error"**
+- Close all Chrome windows and try again
+- Or set `NOTEBOOK_PROFILE_STRATEGY=isolated`
+
+**"Session expired"**
+- Run: "Re-authenticate with NotebookLM"
+
+For more solutions: [docs/troubleshooting.md](./docs/troubleshooting.md)
+
+</details>
+
 ---
 
-## Common Commands
+## Part 8: More Documentation
 
-| Intent          | Say                                                           | Result                           |
-| --------------- | ------------------------------------------------------------- | -------------------------------- |
-| Authenticate    | _"Open NotebookLM auth setup"_ or _"Log me in to NotebookLM"_ | Chrome opens for login           |
-| Add notebook    | _"Add [link] to library"_                                     | Saves notebook with metadata     |
-| List notebooks  | _"Show our notebooks"_                                        | Lists all saved notebooks        |
-| Research first  | _"Research this in NotebookLM before coding"_                 | Multi-question session           |
-| Select notebook | _"Use the React notebook"_                                    | Sets active notebook             |
-| Update notebook | _"Update notebook tags"_                                      | Modify metadata                  |
-| Remove notebook | _"Remove [notebook] from library"_                            | Deletes from library             |
-| View browser    | _"Show me the browser"_                                       | Watch live NotebookLM chat       |
-| Fix auth        | _"Repair NotebookLM authentication"_                          | Clears and re-authenticates      |
-| Switch account  | _"Re-authenticate with different Google account"_             | Changes account                  |
-| Clean restart   | _"Run NotebookLM cleanup"_                                    | Removes all data for fresh start |
-| Keep library    | _"Cleanup but keep my library"_                               | Preserves notebooks              |
-| Delete all data | _"Delete all NotebookLM data"_                                | Complete removal                 |
-
----
-
-## Comparison to Alternatives
-
-### vs. Downloading docs locally
-
-- **You**: Download docs → Claude: "search through these files"
-- **Problem**: Claude reads thousands of files → massive token usage, often misses connections
-- **NotebookLM**: Pre-indexed by Gemini, semantic understanding across all docs
-
-### vs. Web search
-
-- **You**: "Research X online"
-- **Problem**: Outdated info, hallucinated examples, unreliable sources
-- **NotebookLM**: Only your trusted docs, always current, with citations
-
-### vs. Local RAG setup
-
-- **You**: Set up embeddings, vector DB, chunking strategy, retrieval pipeline
-- **Problem**: Hours of setup, tuning retrieval, still gets "creative" with gaps
-- **NotebookLM**: Upload docs → done. Google handles everything.
+| Document | Description | Link |
+|----------|-------------|------|
+| Installation Guide | Detailed installation steps, system requirements, verification, uninstall and upgrade | [docs/installation.md](./docs/installation.md) |
+| Usage Guide | Advanced usage, workflows, best practices, patterns | [docs/usage-guide.md](./docs/usage-guide.md) |
+| Tool Reference | Complete MCP tool API documentation, parameter descriptions | [docs/tools.md](./docs/tools.md) |
+| Configuration | Environment variables, runtime configuration, tool profiles | [docs/configuration.md](./docs/configuration.md) |
+| Troubleshooting | Common problems and solutions | [docs/troubleshooting.md](./docs/troubleshooting.md) |
 
 ---
 
 ## FAQ
 
-**Is it really zero hallucinations?**
-Yes. NotebookLM is specifically designed to only answer from uploaded sources. If it doesn't know, it says so.
+<details>
+<summary><b>Really zero hallucination?</b></summary>
 
-**What about rate limits?**
-Free tier has daily query limits per Google account. Quick account switching supported for continued research.
+Yes. NotebookLM is designed specifically to answer only from uploaded sources. If it doesn't know, it will say so directly.
+</details>
 
-**How secure is this?**
-Chrome runs locally. Your credentials never leave your machine. Use a dedicated Google account if concerned.
+<details>
+<summary><b>Are there rate limits?</b></summary>
 
-**Can I see what's happening?**
-Yes! Say _"Show me the browser"_ to watch the live NotebookLM conversation.
+The free tier has a daily query limit per account. Supports quickly switching accounts to continue research.
+</details>
 
-**What makes this better than Claude's built-in knowledge?**
-Your docs are always current. No training cutoff. No hallucinations. Perfect for new libraries, internal APIs, or fast-moving projects.
+<details>
+<summary><b>How secure is this?</b></summary>
 
----
+Chrome runs locally. Your credentials never leave your machine. If concerned, you can use a dedicated Google account.
+</details>
 
-## Advanced Usage
+<details>
+<summary><b>Can I see what's happening?</b></summary>
 
-- 📥 [**Installation Guide**](./docs/installation.md) — Detailed setup instructions
-- 📖 [**Usage Guide**](./docs/usage-guide.md) — Patterns, workflows, tips
-- 🛠️ [**Tool Reference**](./docs/tools.md) — Complete MCP API
-- 🔧 [**Configuration**](./docs/configuration.md) — Environment variables
-- 🐛 [**Troubleshooting**](./docs/troubleshooting.md) — Common issues
-
----
-
-## The Bottom Line
-
-**Without NotebookLM MCP**: Write code → Find it's wrong → Debug hallucinated APIs → Repeat
-
-**With NotebookLM MCP**: Claude researches first → Writes correct code → Ship faster
-
-Stop debugging hallucinations. Start shipping accurate code.
-
-```bash
-# Get started in 30 seconds
-claude mcp add notebooklm npx notebooklm-mcp@latest
-```
-
----
-
-## Disclaimer
-
-This tool automates browser interactions with NotebookLM to make your workflow more efficient. However, a few friendly reminders:
-
-**About browser automation:**
-While I've built in humanization features (realistic typing speeds, natural delays, mouse movements) to make the automation behave more naturally, I can't guarantee Google won't detect or flag automated usage. I recommend using a dedicated Google account for automation rather than your primary account—think of it like web scraping: probably fine, but better safe than sorry!
-
-**About CLI tools and AI agents:**
-CLI tools like Claude Code, Codex, and similar AI-powered assistants are incredibly powerful, but they can make mistakes. Please use them with care and awareness:
-
-- Always review changes before committing or deploying
-- Test in safe environments first
-- Keep backups of important work
-- Remember: AI agents are assistants, not infallible oracles
-
-I built this tool for myself because I was tired of the copy-paste dance between NotebookLM and my editor. I'm sharing it in the hope it helps others too, but I can't take responsibility for any issues, data loss, or account problems that might occur. Use at your own discretion and judgment.
-
-That said, if you run into problems or have questions, feel free to open an issue on GitHub. I'm happy to help troubleshoot!
-
----
-
-## Contributing
-
-Found a bug? Have a feature idea? [Open an issue](https://github.com/PleasePrompto/notebooklm-mcp/issues) or submit a PR!
-
-## License
-
-MIT — Use freely in your projects.
+Yes! Say "Show me the browser" to your AI to watch the NotebookLM conversation in real-time.
+</details>
 
 ---
 
@@ -438,6 +453,8 @@ MIT — Use freely in your projects.
 
 Built with frustration about hallucinated APIs, powered by Google's NotebookLM
 
-⭐ [Star on GitHub](https://github.com/PleasePrompto/notebooklm-mcp) if this saves you debugging time!
+⭐ [Star on GitHub](https://github.com/PleasePrompto/notebooklm-mcp) if this saves your debugging time!
+
+[中文版](./README.md) • [Report Issues](https://github.com/PleasePrompto/notebooklm-mcp/issues)
 
 </div>

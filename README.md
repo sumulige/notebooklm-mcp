@@ -2,7 +2,7 @@
 
 # NotebookLM MCP 服务器
 
-**让您的 CLI AI 代理 (Claude、Cursor、Codex) 直接与 NotebookLM 对话，获得基于您文档的零幻觉答案**
+**让您的 AI 代理直接与 NotebookLM 对话，获得基于您文档的准确答案**
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![MCP](https://img.shields.io/badge/MCP-2025-green.svg)](https://modelcontextprotocol.io/)
@@ -10,50 +10,217 @@
 [![Claude Code Skill](https://img.shields.io/badge/Claude%20Code-Skill-purple.svg)](https://github.com/PleasePrompto/notebooklm-skill)
 [![GitHub](https://img.shields.io/github/stars/PleasePrompto/notebooklm-mcp?style=social)](https://github.com/PleasePrompto/notebooklm-mcp)
 
-[快速开始](#快速开始) • [功能特性](#功能特性) • [文档索引](#文档索引) • [常见问题](#常见问题)
-
 </div>
 
 ---
 
-## 为什么需要 NotebookLM MCP？
+## 第一部分：这是什么？为什么要用它？
 
-当您告诉 Claude Code 或 Cursor "搜索我的本地文档"时，通常会遇到这些问题：
+### 一个常见的问题
 
-- **Token 消耗巨大** - 搜索文档需要反复读取多个文件
-- **检索不准确** - 只能搜索关键词，缺少上下文关联
-- **产生幻觉** - 当找不到信息时，会编造看似合理的 API
-- **昂贵且缓慢** - 每个问题都需要重新读取多个文件
+你有没有遇到过这种情况：
 
-## 解决方案
+> 你让 Claude 帮你写代码，使用某个库的 API。结果它自信地写了一段代码，但运行时却报错——**这个 API 根本不存在**。
 
-让您的本地 AI 代理直接与 [**NotebookLM**](https://notebooklm.google/) 对话 — Google 基于 Gemini 2.5 的**零幻觉知识库**，能够从您的文档中提供智能、综合的答案。
+这不是 Claude 故意捣乱。问题是：
 
-```
-您的任务 → 本地 AI 询问 NotebookLM → Gemini 综合答案 → AI 编写准确代码
-```
+1. **Claude 的知识有截止日期**——新出的库、更新的 API，它可能不知道
+2. **Claude 会"填补空白"**——当信息不足时，它会根据经验"猜测"一个看似合理的答案
+3. **读取本地文档消耗巨大**——让 AI 搜索多个文件需要消耗大量 token
 
-**真正的优势**：不再需要在 NotebookLM 和编辑器之间手动复制粘贴。您的代理直接向 NotebookLM 提问并立即在 CLI 中获得答案。它通过自动追问建立深入理解 — Claude 会按顺序问多个问题，每个问题都基于前一个答案，获取具体的实现细节、边缘情况和最佳实践。
+### 解决方案
+
+**NotebookLM** 是 Google 基于 Gemini 2.0 构建的"零幻觉"知识库：
+
+- 你上传文档（PDF、网页、YouTube 视频等）
+- NotebookLM 阅读并理解这些内容
+- 当你提问时，它**只**基于你上传的文档回答——不知道的会直接说不知道
+
+**NotebookLM MCP** 是一座桥梁，让您的 AI 代理（Claude Code、Cursor 等）能够直接向 NotebookLM 提问。
 
 ---
 
-## 快速开始
+## 第二部分：它是如何工作的？
 
-### 1. 安装
+### 一个类比
+
+想象一下：
+
+```
+传统方式：
+你 → 把文档发给 Claude → Claude 尝试记住 → 可能编造 API
+
+使用 NotebookLM MCP：
+你 → Claude 向"图书管理员"提问 → "图书管理员"查阅文档 → 返回准确答案
+```
+
+**NotebookLM 就是那个读透了所有文档的"图书管理员"**，而且它拒绝瞎猜。
+
+### 工作流程
+
+```mermaid
+graph LR
+    A[你: 帮我用这个库] --> B[Claude Code]
+    B --> C[MCP: 我需要查文档]
+    C --> D[NotebookLM]
+    D --> E[Gemini 阅读你的文档]
+    E --> D
+    D --> C
+    C --> B
+    B --> F[准确代码]
+```
+
+### 核心优势
+
+| 特性 | 传统方式 | NotebookLM MCP |
+|------|----------|----------------|
+| **幻觉风险** | 高 - 可能编造 API | **零** - 只回答文档中的内容 |
+| **Token 消耗** | 高 - 需要反复读取文件 | **低** - 只传输问答结果 |
+| **知识新鲜度** | 受限于训练截止 | **永远最新** - 你上传的就是最新的 |
+| **多文档关联** | 困难 | **简单** - 自动综合多个来源 |
+
+---
+
+## 第三部分：5 分钟快速上手
+
+<details>
+<summary><b>前提条件</b>（点击查看）</summary>
+
+- Node.js 18+ 已安装
+- Claude Code / Cursor / Codex 任一工具
+- Google 账户（用于使用 NotebookLM）
+
+</details>
+
+### 步骤 1：安装（一行命令）
 
 **Claude Code:**
-
 ```bash
 claude mcp add notebooklm npx notebooklm-mcp@latest
 ```
 
-**Codex:**
-
-```bash
-codex mcp add notebooklm -- npx notebooklm-mcp@latest
+**Cursor:** 编辑 `~/.cursor/mcp.json`，添加：
+```json
+{
+  "mcpServers": {
+    "notebooklm": {
+      "command": "npx",
+      "args": ["-y", "notebooklm-mcp@latest"]
+    }
+  }
+}
 ```
 
-**Cursor** - 添加到 `~/.cursor/mcp.json`:
+### 步骤 2：登录 NotebookLM（一次性）
+
+对您的 AI 说：
+```
+"Log me in to NotebookLM"
+```
+
+Chrome 会自动打开，使用 Google 登录即可。
+
+### 步骤 3：创建知识库
+
+1. 访问 [notebooklm.google.com](https://notebooklm.google.com)
+2. 创建笔记本，上传您的文档
+3. 点击 ⚙️ Share → Anyone with link → 复制链接
+
+### 步骤 4：开始使用
+
+告诉您的 AI：
+```
+"I'm working with [库名]。这是我的 NotebookLM：[粘贴链接]"
+```
+
+**就这样！** 现在当您提问时，AI 会自动向 NotebookLM 查询文档中的准确信息。
+
+---
+
+## 第四部分：核心概念详解
+
+<details>
+<summary><b>什么是"零幻觉"？</b></summary>
+
+NotebookLM 的设计原则是：**严格基于提供的来源回答**。
+
+- 如果文档中有答案 → 准确引用并回答
+- 如果文档中没有答案 → 直接说"文档中没有提到这个信息"
+
+这与通用大语言模型不同——通用模型倾向于" helpful"，即使不知道也会尝试推测一个答案。
+
+</details>
+
+<details>
+<summary><b>为什么需要 MCP？</b></summary>
+
+**MCP（Model Context Protocol）** 是 AI 代理使用外部工具的标准方式。
+
+可以把它理解为 AI 的"USB 接口"：
+- AI 本身不能直接访问互联网
+- 但通过 MCP，AI 可以调用各种"工具"（如浏览器、数据库）
+- NotebookLM MCP 就是这样一个工具，让 AI 能够查询 NotebookLM
+
+</details>
+
+<details>
+<summary><b>自动追问是什么？</b></summary>
+
+这是最强大的功能之一。当您问一个复杂问题时，AI 会：
+
+1. 先问 NotebookLM 一个基础问题
+2. 根据答案，提出更深入的追问
+3. 重复这个过程，直到完全理解
+
+**示例：**
+```
+你: "怎么用这个状态管理库？"
+
+AI → NotebookLM: "这个库的核心概念是什么？"
+    → 得到答案后 →
+    → NotebookLM: "怎么初始化 store？"
+    → 得到答案后 →
+    → NotebookLM: "如何处理异步 action？"
+
+最终: AI 综合所有答案，写出准确的代码
+```
+
+</details>
+
+---
+
+## 第五部分：安装指南
+
+### 系统要求
+
+| 要求 | 最低 | 推荐 |
+|------|------|------|
+| Node.js | 18.0.0 | 20.x LTS |
+| 内存 | 2 GB | 4 GB |
+| 磁盘空间 | 500 MB | 1 GB |
+
+### 按客户端安装
+
+<details>
+<summary><b>Claude Code</b></summary>
+
+```bash
+# 安装
+claude mcp add notebooklm npx notebooklm-mcp@latest
+
+# 验证
+claude mcp list
+
+# 卸载
+claude mcp remove notebooklm
+```
+
+</details>
+
+<details>
+<summary><b>Cursor</b></summary>
+
+编辑 `~/.cursor/mcp.json`：
 
 ```json
 {
@@ -66,29 +233,40 @@ codex mcp add notebooklm -- npx notebooklm-mcp@latest
 }
 ```
 
+**注意：** 修改后需要重启 Cursor。
+
+</details>
+
 <details>
-<summary>其他客户端 (Gemini, VS Code, amp)</summary>
+<summary><b>Codex</b></summary>
+
+```bash
+# 安装
+codex mcp add notebooklm -- npx notebooklm-mcp@latest
+
+# 验证
+codex mcp list
+
+# 卸载
+codex mcp remove notebooklm
+```
+
+</details>
+
+<details>
+<summary><b>Gemini / VS Code / 其他</b></summary>
 
 **Gemini:**
-
 ```bash
 gemini mcp add notebooklm npx notebooklm-mcp@latest
 ```
 
 **VS Code:**
-
 ```bash
 code --add-mcp '{"name":"notebooklm","command":"npx","args":["notebooklm-mcp@latest"]}'
 ```
 
-**amp:**
-
-```bash
-amp mcp add notebooklm -- npx notebooklm-mcp@latest
-```
-
-**其他 MCP 客户端通用配置:**
-
+**通用配置格式:**
 ```json
 {
   "mcpServers": {
@@ -102,176 +280,172 @@ amp mcp add notebooklm -- npx notebooklm-mcp@latest
 
 </details>
 
-### 2. 认证 (一次性)
+---
 
-在聊天中对您的 AI 代理说：
+## 第六部分：使用场景和示例
 
+### 场景 1：学习新框架
+
+**问题：** 你想用一个新的 UI 框架，但不知道 API
+
+**操作：**
 ```
-"Log me in to NotebookLM"
-```
-
-Chrome 窗口会自动打开 → 使用 Google 登录
-
-### 3. 创建知识库
-
-访问 [notebooklm.google.com](https://notebooklm.google.com) → 创建笔记本 → 上传您的文档：
-
-- 📄 PDF、Google Docs、Markdown 文件
-- 🔗 网站、GitHub 仓库
-- 🎥 YouTube 视频
-- 📚 每个笔记本可添加多个来源
-
-分享方式：⚙️ Share → Anyone with link → 复制链接
-
-### 4. 开始使用
-
-```
-"I'm building with [library]. Here's my NotebookLM: [link]"
+"我要用 [框架名] 构建应用。这是文档 NotebookLM：[链接]"
+"这个框架的组件系统是怎么工作的？"
+"给我一个完整的组件示例"
 ```
 
-**就这样！** Claude 现在会根据需要向 NotebookLM 提问，在编写代码前建立专业知识。
+**结果：** AI 基于文档给你准确的代码，不会编造不存在的 API。
 
 ---
 
-## 功能特性
+### 场景 2：查询内部 API 文档
 
-### 🎯 零幻觉保证
+**问题：** 公司的内部 API 文档很复杂
 
-NotebookLM 拒绝回答文档中没有的信息。不会有编造的 API。
+**操作：**
+1. 把内部文档上传到 NotebookLM
+2. 告诉 AI 链接
+3. 提问："我们的用户认证流程是怎样的？"
 
-### 🤖 自主研究
+**结果：** AI 准确引用内部文档，给出正确的 API 调用方式。
 
-Claude 自动追问相关问题，在编码前建立完整的理解。
+---
 
-### 📚 智能库管理
+### 场景 3：综合多源信息
 
-保存 NotebookLM 链接并添加标签和描述。Claude 会根据您的任务自动选择合适的笔记本。
+**问题：** 信息分散在多个文档、视频、网页中
 
-```
-"Add [link] to library tagged 'frontend, react, components'"
-```
+**操作：**
+- 在 NotebookLM 中创建笔记本
+- 添加多个来源（PDF、网站、YouTube 视频等）
+- 让 AI 综合回答
 
-### 🔁 跨工具共享
+**结果：** NotebookLM 关联所有来源，给出综合性答案。
 
-一次设置，随处使用。Claude Code、Codex、Cursor — 所有工具共享同一个库。
+---
 
-### 🛠️ 工具配置文件
+### 常用指令速查
 
-通过仅加载需要的工具来减少 Token 使用。
+| 意图 | 对 AI 说 | 结果 |
+|------|----------|------|
+| 认证 | "Log me in to NotebookLM" | 打开登录窗口 |
+| 添加笔记本 | "Add [link] to library" | 保存笔记本 |
+| 列出笔记本 | "Show our notebooks" | 显示所有保存的笔记本 |
+| 选择笔记本 | "Use the React notebook" | 设置活动笔记本 |
+| 查看浏览器 | "Show me the browser" | 实时查看 NotebookLM 对话 |
+| 修复认证 | "Repair NotebookLM authentication" | 清除并重新认证 |
 
-| 配置         | 工具数 | 用途                                                                                                             |
-| ------------ | ------ | ---------------------------------------------------------------------------------------------------------------- |
-| **minimal**  | 5      | 仅查询：`ask_question`, `get_health`, `list_notebooks`, `select_notebook`, `get_notebook`                        |
-| **standard** | 10     | + 库管理：`setup_auth`, `list_sessions`, `add_notebook`, `update_notebook`, `search_notebooks`                   |
-| **full**     | 16     | 所有工具包括 `cleanup_data`, `re_auth`, `remove_notebook`, `reset_session`, `close_session`, `get_library_stats` |
+---
 
-**配置方式:**
+## 第七部分：高级配置
 
+<details>
+<summary><b>工具配置文件（减少 Token 消耗）</b></summary>
+
+通过只加载需要的工具来减少 Token 使用：
+
+| 配置 | 工具数 | 包含工具 |
+|------|--------|----------|
+| **minimal** | 5 | 仅查询：`ask_question`, `get_health`, `list_notebooks`, `select_notebook`, `get_notebook` |
+| **standard** | 10 | + 库管理：`setup_auth`, `list_sessions`, `add_notebook`, `update_notebook`, `search_notebooks` |
+| **full** | 16 | 所有工具 |
+
+**配置方式：**
 ```bash
-# CLI 配置
-npx notebooklm-mcp config set profile minimal
-
-# 环境变量配置
+# 环境变量
 export NOTEBOOKLM_PROFILE=minimal
+
+# CLI
+npx notebooklm-mcp@latest --profile minimal
 ```
 
----
+</details>
 
-## 文档索引
+<details>
+<summary><b>环境变量配置</b></summary>
 
-📚 **完整文档**
-
-| 文档            | 描述                                         | 链接                                                 |
-| --------------- | -------------------------------------------- | ---------------------------------------------------- |
-| 📥 **安装指南** | 详细安装步骤、系统要求、验证方法、卸载和升级 | [docs/installation.md](./docs/installation.md)       |
-| 📖 **使用指南** | 高级用法、工作流、最佳实践、模式             | [docs/usage-guide.md](./docs/usage-guide.md)         |
-| 🛠️ **工具参考** | 完整 MCP 工具 API 文档、参数说明             | [docs/tools.md](./docs/tools.md)                     |
-| 🔧 **配置说明** | 环境变量、运行时配置、工具配置               | [docs/configuration.md](./docs/configuration.md)     |
-| 🐛 **问题排查** | 常见问题和解决方案                           | [docs/troubleshooting.md](./docs/troubleshooting.md) |
-
----
-
-## 架构
-
-```mermaid
-graph LR
-    A[您的任务] --> B[Claude/Codex]
-    B --> C[MCP Server]
-    C --> D[Chrome Automation]
-    D --> E[NotebookLM]
-    E --> F[Gemini 2.5]
-    F --> G[您的文档]
-    G --> F
-    F --> E
-    E --> D
-    D --> C
-    C --> B
-    B --> H[准确代码]
+**浏览器行为：**
+```bash
+export HEADLESS=false          # 显示浏览器窗口
+export BROWSER_TIMEOUT=60000   # 超时时间（毫秒）
 ```
 
+**隐身模式（模拟人类行为）：**
+```bash
+export STEALTH_ENABLED=true
+export STEALTH_HUMAN_TYPING=true
+export TYPING_WPM_MIN=160      # 打字速度范围
+export TYPING_WPM_MAX=240
+```
+
+**会话管理：**
+```bash
+export MAX_SESSIONS=10         # 最大并发会话
+export SESSION_TIMEOUT=900     # 会话超时（秒）
+```
+
+完整配置说明见：[docs/configuration.md](./docs/configuration.md)
+
+</details>
+
+<details>
+<summary><b>故障排查</b></summary>
+
+**"Chrome not found"**
+- Linux: `sudo apt install chromium-browser`
+- macOS/Windows: Chrome 会自动安装
+
+**"ProcessSingleton error"**
+- 关闭所有 Chrome 窗口后重试
+- 或设置 `NOTEBOOK_PROFILE_STRATEGY=isolated`
+
+**"Session expired"**
+- 运行："Re-authenticate with NotebookLM"
+
+更多问题解决方案：[docs/troubleshooting.md](./docs/troubleshooting.md)
+
+</details>
+
 ---
 
-## 常用命令
+## 第八部分：更多文档
 
-| 意图       | 说的话                                                        | 结果                     |
-| ---------- | ------------------------------------------------------------- | ------------------------ |
-| 认证       | _"Open NotebookLM auth setup"_ 或 _"Log me in to NotebookLM"_ | Chrome 打开登录窗口      |
-| 添加笔记本 | _"Add [link] to library"_                                     | 保存笔记本并添加元数据   |
-| 列出笔记本 | _"Show our notebooks"_                                        | 列出所有保存的笔记本     |
-| 先研究     | _"Research this in NotebookLM before coding"_                 | 多问题会话               |
-| 选择笔记本 | _"Use the React notebook"_                                    | 设置活动笔记本           |
-| 更新笔记本 | _"Update notebook tags"_                                      | 修改元数据               |
-| 删除笔记本 | _"Remove [notebook] from library"_                            | 从库中删除               |
-| 查看浏览器 | _"Show me the browser"_                                       | 实时观看 NotebookLM 对话 |
-| 修复认证   | _"Repair NotebookLM authentication"_                          | 清除并重新认证           |
-| 切换账户   | _"Re-authenticate with different Google account"_             | 更换账户                 |
-| 清理重启   | _"Run NotebookLM cleanup"_                                    | 删除所有数据，重新开始   |
-| 保留库     | _"Cleanup but keep my library"_                               | 保留笔记本               |
-| 删除所有   | _"Delete all NotebookLM data"_                                | 完全删除                 |
-
----
-
-## 与其他方案对比
-
-| 方案                      | Token 消耗           | 设置时间            | 幻觉                | 答案质量   |
-| ------------------------- | -------------------- | ------------------- | ------------------- | ---------- |
-| **直接投喂文档给 Claude** | 🔴 很高 (多文件读取) | 立即                | 是 - 填补空白       | 变化的检索 |
-| **网络搜索**              | 🟡 中等              | 立即                | 高 - 不可靠来源     | 看运气     |
-| **本地 RAG**              | 🟡 中-高             | 数小时 (embeddings) | 中等 - 检索空白     | 取决于设置 |
-| **NotebookLM MCP**        | 🟢 最少              | 5 分钟              | **零** - 未知则拒绝 | 专家综合   |
-
-### NotebookLM 的优势
-
-1. **由 Gemini 预处理**：上传一次文档，立即获得专家知识
-2. **自然语言问答**：不仅是检索 — 实际的理解和综合
-3. **多源关联**：连接 50+ 文档之间的信息
-4. **引用支持**：每个答案都包含来源引用
-5. **无需基础设施**：无需向量 DB、embeddings 或分块策略
+| 文档 | 描述 | 链接 |
+|------|------|------|
+| 安装指南 | 详细安装步骤、系统要求、验证方法、卸载和升级 | [docs/installation.md](./docs/installation.md) |
+| 使用指南 | 高级用法、工作流、最佳实践、模式 | [docs/usage-guide.md](./docs/usage-guide.md) |
+| 工具参考 | 完整 MCP 工具 API 文档、参数说明 | [docs/tools.md](./docs/tools.md) |
+| 配置说明 | 环境变量、运行时配置、工具配置 | [docs/configuration.md](./docs/configuration.md) |
+| 问题排查 | 常见问题和解决方案 | [docs/troubleshooting.md](./docs/troubleshooting.md) |
 
 ---
 
 ## 常见问题
 
-**真的零幻觉吗？**
+<details>
+<summary><b>真的零幻觉吗？</b></summary>
+
 是的。NotebookLM 专门设计为仅从上传的来源回答。如果不知道，它会直接说不知道。
+</details>
 
-**有速率限制吗？**
+<details>
+<summary><b>有速率限制吗？</b></summary>
+
 免费 tier 每个账户每天有查询次数限制。支持快速切换账户继续研究。
+</details>
 
-**这有多安全？**
+<details>
+<summary><b>这有多安全？</b></summary>
+
 Chrome 在本地运行。您的凭据永远不会离开您的机器。如果担心，可以使用专用的 Google 账户。
+</details>
 
-**可以看到正在发生什么吗？**
-可以！说 _"Show me the browser"_ 来实时观看 NotebookLM 对话。
+<details>
+<summary><b>可以看到正在发生什么吗？</b></summary>
 
-**这比 Claude 内置知识好在哪里？**
-您的文档始终是最新的。没有训练截止。没有幻觉。非常适合新库、内部 API 或快速发展的项目。
-
----
-
-## 许可证
-
-MIT — 自由在您的项目中使用。
+可以！对 AI 说 "Show me the browser" 来实时观看 NotebookLM 对话。
+</details>
 
 ---
 
