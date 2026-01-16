@@ -1,8 +1,8 @@
 <div align="center">
 
-# NotebookLM MCP Server
+# NotebookLM MCP 服务器
 
-**Let your CLI agents (Claude, Cursor, Codex...) chat directly with NotebookLM for zero-hallucination answers based on your own notebooks**
+**让您的 CLI AI 代理 (Claude、Cursor、Codex) 直接与 NotebookLM 对话，获得基于您文档的零幻觉答案**
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![MCP](https://img.shields.io/badge/MCP-2025-green.svg)](https://modelcontextprotocol.io/)
@@ -10,79 +10,50 @@
 [![Claude Code Skill](https://img.shields.io/badge/Claude%20Code-Skill-purple.svg)](https://github.com/PleasePrompto/notebooklm-skill)
 [![GitHub](https://img.shields.io/github/stars/PleasePrompto/notebooklm-mcp?style=social)](https://github.com/PleasePrompto/notebooklm-mcp)
 
-[Installation](#installation) • [Quick Start](#quick-start) • [Why NotebookLM](#why-notebooklm-not-local-rag) • [Examples](#real-world-example) • [Claude Code Skill](https://github.com/PleasePrompto/notebooklm-skill) • [Documentation](./docs/)
+[快速开始](#快速开始) • [功能特性](#功能特性) • [文档索引](#文档索引) • [常见问题](#常见问题)
 
 </div>
 
 ---
 
-## The Problem
+## 为什么需要 NotebookLM MCP？
 
-When you tell Claude Code or Cursor to "search through my local documentation", here's what happens:
+当您告诉 Claude Code 或 Cursor "搜索我的本地文档"时，通常会遇到这些问题：
 
-- **Massive token consumption**: Searching through documentation means reading multiple files repeatedly
-- **Inaccurate retrieval**: Searches for keywords, misses context and connections between docs
-- **Hallucinations**: When it can't find something, it invents plausible-sounding APIs
-- **Expensive & slow**: Each question requires re-reading multiple files
+- **Token 消耗巨大** - 搜索文档需要反复读取多个文件
+- **检索不准确** - 只能搜索关键词，缺少上下文关联
+- **产生幻觉** - 当找不到信息时，会编造看似合理的 API
+- **昂贵且缓慢** - 每个问题都需要重新读取多个文件
 
-## The Solution
+## 解决方案
 
-Let your local agents chat directly with [**NotebookLM**](https://notebooklm.google/) — Google's **zero-hallucination knowledge base** powered by Gemini 2.5 that provides intelligent, synthesized answers from your docs.
+让您的本地 AI 代理直接与 [**NotebookLM**](https://notebooklm.google/) 对话 — Google 基于 Gemini 2.5 的**零幻觉知识库**，能够从您的文档中提供智能、综合的答案。
 
 ```
-Your Task → Local Agent asks NotebookLM → Gemini synthesizes answer → Agent writes correct code
+您的任务 → 本地 AI 询问 NotebookLM → Gemini 综合答案 → AI 编写准确代码
 ```
 
-**The real advantage**: No more manual copy-paste between NotebookLM and your editor. Your agent asks NotebookLM directly and gets answers straight back in the CLI. It builds deep understanding through automatic follow-ups — Claude asks multiple questions in sequence, each building on the last, getting specific implementation details, edge cases, and best practices. You can save NotebookLM links to your local library with tags and descriptions, and Claude automatically selects the relevant notebook based on your current task.
+**真正的优势**：不再需要在 NotebookLM 和编辑器之间手动复制粘贴。您的代理直接向 NotebookLM 提问并立即在 CLI 中获得答案。它通过自动追问建立深入理解 — Claude 会按顺序问多个问题，每个问题都基于前一个答案，获取具体的实现细节、边缘情况和最佳实践。
 
 ---
 
-## Why NotebookLM, Not Local RAG?
+## 快速开始
 
-| Approach                | Token Cost                         | Setup Time                   | Hallucinations                | Answer Quality     |
-| ----------------------- | ---------------------------------- | ---------------------------- | ----------------------------- | ------------------ |
-| **Feed docs to Claude** | 🔴 Very high (multiple file reads) | Instant                      | Yes - fills gaps              | Variable retrieval |
-| **Web search**          | 🟡 Medium                          | Instant                      | High - unreliable sources     | Hit or miss        |
-| **Local RAG**           | 🟡 Medium-High                     | Hours (embeddings, chunking) | Medium - retrieval gaps       | Depends on setup   |
-| **NotebookLM MCP**      | 🟢 Minimal                         | 5 minutes                    | **Zero** - refuses if unknown | Expert synthesis   |
+### 1. 安装
 
-### What Makes NotebookLM Superior?
-
-1. **Pre-processed by Gemini**: Upload docs once, get instant expert knowledge
-2. **Natural language Q&A**: Not just retrieval — actual understanding and synthesis
-3. **Multi-source correlation**: Connects information across 50+ documents
-4. **Citation-backed**: Every answer includes source references
-5. **No infrastructure**: No vector DBs, embeddings, or chunking strategies needed
-
----
-
-## Installation
-
-### Claude Code
+**Claude Code:**
 
 ```bash
 claude mcp add notebooklm npx notebooklm-mcp@latest
 ```
 
-### Codex
+**Codex:**
 
 ```bash
 codex mcp add notebooklm -- npx notebooklm-mcp@latest
 ```
 
-<details>
-<summary>Gemini</summary>
-
-```bash
-gemini mcp add notebooklm npx notebooklm-mcp@latest
-```
-
-</details>
-
-<details>
-<summary>Cursor</summary>
-
-Add to `~/.cursor/mcp.json`:
+**Cursor** - 添加到 `~/.cursor/mcp.json`:
 
 ```json
 {
@@ -95,30 +66,28 @@ Add to `~/.cursor/mcp.json`:
 }
 ```
 
-</details>
-
 <details>
-<summary>amp</summary>
+<summary>其他客户端 (Gemini, VS Code, amp)</summary>
+
+**Gemini:**
 
 ```bash
-amp mcp add notebooklm -- npx notebooklm-mcp@latest
+gemini mcp add notebooklm npx notebooklm-mcp@latest
 ```
 
-</details>
-
-<details>
-<summary>VS Code</summary>
+**VS Code:**
 
 ```bash
 code --add-mcp '{"name":"notebooklm","command":"npx","args":["notebooklm-mcp@latest"]}'
 ```
 
-</details>
+**amp:**
 
-<details>
-<summary>Other MCP clients</summary>
+```bash
+amp mcp add notebooklm -- npx notebooklm-mcp@latest
+```
 
-**Generic MCP config:**
+**其他 MCP 客户端通用配置:**
 
 ```json
 {
@@ -133,304 +102,176 @@ code --add-mcp '{"name":"notebooklm","command":"npx","args":["notebooklm-mcp@lat
 
 </details>
 
----
+### 2. 认证 (一次性)
 
-## Alternative: Claude Code Skill
-
-**Prefer Claude Code Skills over MCP?** This server is now also available as a native Claude Code Skill with a simpler setup:
-
-**[NotebookLM Claude Code Skill](https://github.com/PleasePrompto/notebooklm-skill)** - Clone to `~/.claude/skills` and start using immediately
-
-**Key differences:**
-
-- **MCP Server** (this repo): Persistent sessions, works with Claude Code, Codex, Cursor, and other MCP clients
-- **Claude Code Skill**: Simpler setup, Python-based, stateless queries, works only with local Claude Code
-
-Both use the same browser automation technology and provide zero-hallucination answers from your NotebookLM notebooks.
-
----
-
-## Quick Start
-
-### 1. Install the MCP server (see [Installation](#installation) above)
-
-### 2. Authenticate (one-time)
-
-Say in your chat (Claude/Codex):
+在聊天中对您的 AI 代理说：
 
 ```
 "Log me in to NotebookLM"
 ```
 
-_A Chrome window opens → log in with Google_
+Chrome 窗口会自动打开 → 使用 Google 登录
 
-### 3. Create your knowledge base
+### 3. 创建知识库
 
-Go to [notebooklm.google.com](https://notebooklm.google.com) → Create notebook → Upload your docs:
+访问 [notebooklm.google.com](https://notebooklm.google.com) → 创建笔记本 → 上传您的文档：
 
-- 📄 PDFs, Google Docs, markdown files
-- 🔗 Websites, GitHub repos
-- 🎥 YouTube videos
-- 📚 Multiple sources per notebook
+- 📄 PDF、Google Docs、Markdown 文件
+- 🔗 网站、GitHub 仓库
+- 🎥 YouTube 视频
+- 📚 每个笔记本可添加多个来源
 
-Share: **⚙️ Share → Anyone with link → Copy**
+分享方式：⚙️ Share → Anyone with link → 复制链接
 
-### 4. Let Claude use it
+### 4. 开始使用
 
 ```
 "I'm building with [library]. Here's my NotebookLM: [link]"
 ```
 
-**That's it.** Claude now asks NotebookLM whatever it needs, building expertise before writing code.
+**就这样！** Claude 现在会根据需要向 NotebookLM 提问，在编写代码前建立专业知识。
 
 ---
 
-## Real-World Example
+## 功能特性
 
-### Building an n8n Workflow Without Hallucinations
+### 🎯 零幻觉保证
 
-**Challenge**: n8n's API is new — Claude hallucinates node names and functions.
+NotebookLM 拒绝回答文档中没有的信息。不会有编造的 API。
 
-**Solution**:
+### 🤖 自主研究
 
-1. Downloaded complete n8n documentation → merged into manageable chunks
-2. Uploaded to NotebookLM
-3. Told Claude: _"Build me a Gmail spam filter workflow. Use this NotebookLM: [link]"_
+Claude 自动追问相关问题，在编码前建立完整的理解。
 
-**Watch the AI-to-AI conversation:**
+### 📚 智能库管理
 
-```
-Claude → "How does Gmail integration work in n8n?"
-NotebookLM → "Use Gmail Trigger with polling, or Gmail node with Get Many..."
-
-Claude → "How to decode base64 email body?"
-NotebookLM → "Body is base64url encoded in payload.parts, use Function node..."
-
-Claude → "How to parse OpenAI response as JSON?"
-NotebookLM → "Set responseFormat to json, use {{ $json.spam }} in IF node..."
-
-Claude → "What about error handling if the API fails?"
-NotebookLM → "Use Error Trigger node with Continue On Fail enabled..."
-
-Claude → ✅ "Here's your complete workflow JSON..."
-```
-
-**Result**: Perfect workflow on first try. No debugging hallucinated APIs.
-
----
-
-## Core Features
-
-### **Zero Hallucinations**
-
-NotebookLM refuses to answer if information isn't in your docs. No invented APIs.
-
-### **Autonomous Research**
-
-Claude asks follow-up questions automatically, building complete understanding before coding.
-
-### **Smart Library Management**
-
-Save NotebookLM links with tags and descriptions. Claude auto-selects the right notebook for your task.
+保存 NotebookLM 链接并添加标签和描述。Claude 会根据您的任务自动选择合适的笔记本。
 
 ```
 "Add [link] to library tagged 'frontend, react, components'"
 ```
 
-### **Deep, Iterative Research**
+### 🔁 跨工具共享
 
-- Claude automatically asks follow-up questions to build complete understanding
-- Each answer triggers deeper questions until Claude has all the details
-- Example: For n8n workflow, Claude asked multiple sequential questions about Gmail integration, error handling, and data transformation
+一次设置，随处使用。Claude Code、Codex、Cursor — 所有工具共享同一个库。
 
-### **Cross-Tool Sharing**
+### 🛠️ 工具配置文件
 
-Set up once, use everywhere. Claude Code, Codex, Cursor — all share the same library.
+通过仅加载需要的工具来减少 Token 使用。
 
-### **Deep Cleanup Tool**
+| 配置         | 工具数 | 用途                                                                                                             |
+| ------------ | ------ | ---------------------------------------------------------------------------------------------------------------- |
+| **minimal**  | 5      | 仅查询：`ask_question`, `get_health`, `list_notebooks`, `select_notebook`, `get_notebook`                        |
+| **standard** | 10     | + 库管理：`setup_auth`, `list_sessions`, `add_notebook`, `update_notebook`, `search_notebooks`                   |
+| **full**     | 16     | 所有工具包括 `cleanup_data`, `re_auth`, `remove_notebook`, `reset_session`, `close_session`, `get_library_stats` |
 
-Fresh start anytime. Scans entire system for NotebookLM data with categorized preview.
-
----
-
-## Tool Profiles
-
-Reduce token usage by loading only the tools you need. Each tool consumes context tokens — fewer tools = faster responses and lower costs.
-
-### Available Profiles
-
-| Profile      | Tools | Use Case                                                                                                                |
-| ------------ | ----- | ----------------------------------------------------------------------------------------------------------------------- |
-| **minimal**  | 5     | Query-only: `ask_question`, `get_health`, `list_notebooks`, `select_notebook`, `get_notebook`                           |
-| **standard** | 10    | + Library management: `setup_auth`, `list_sessions`, `add_notebook`, `update_notebook`, `search_notebooks`              |
-| **full**     | 16    | All tools including `cleanup_data`, `re_auth`, `remove_notebook`, `reset_session`, `close_session`, `get_library_stats` |
-
-### Configure via CLI
+**配置方式:**
 
 ```bash
-# Check current settings
-npx notebooklm-mcp config get
-
-# Set a profile
+# CLI 配置
 npx notebooklm-mcp config set profile minimal
-npx notebooklm-mcp config set profile standard
-npx notebooklm-mcp config set profile full
 
-# Disable specific tools (comma-separated)
-npx notebooklm-mcp config set disabled-tools "cleanup_data,re_auth"
-
-# Reset to defaults
-npx notebooklm-mcp config reset
-```
-
-### Configure via Environment Variables
-
-```bash
-# Set profile
+# 环境变量配置
 export NOTEBOOKLM_PROFILE=minimal
-
-# Disable specific tools
-export NOTEBOOKLM_DISABLED_TOOLS="cleanup_data,re_auth,remove_notebook"
 ```
-
-Settings are saved to `~/.config/notebooklm-mcp/settings.json` and persist across sessions. Environment variables override file settings.
 
 ---
 
-## Architecture
+## 文档索引
+
+📚 **完整文档**
+
+| 文档            | 描述                                         | 链接                                                 |
+| --------------- | -------------------------------------------- | ---------------------------------------------------- |
+| 📥 **安装指南** | 详细安装步骤、系统要求、验证方法、卸载和升级 | [docs/installation.md](./docs/installation.md)       |
+| 📖 **使用指南** | 高级用法、工作流、最佳实践、模式             | [docs/usage-guide.md](./docs/usage-guide.md)         |
+| 🛠️ **工具参考** | 完整 MCP 工具 API 文档、参数说明             | [docs/tools.md](./docs/tools.md)                     |
+| 🔧 **配置说明** | 环境变量、运行时配置、工具配置               | [docs/configuration.md](./docs/configuration.md)     |
+| 🐛 **问题排查** | 常见问题和解决方案                           | [docs/troubleshooting.md](./docs/troubleshooting.md) |
+
+---
+
+## 架构
 
 ```mermaid
 graph LR
-    A[Your Task] --> B[Claude/Codex]
+    A[您的任务] --> B[Claude/Codex]
     B --> C[MCP Server]
     C --> D[Chrome Automation]
     D --> E[NotebookLM]
     E --> F[Gemini 2.5]
-    F --> G[Your Docs]
+    F --> G[您的文档]
     G --> F
     F --> E
     E --> D
     D --> C
     C --> B
-    B --> H[Accurate Code]
+    B --> H[准确代码]
 ```
 
 ---
 
-## Common Commands
+## 常用命令
 
-| Intent          | Say                                                           | Result                           |
-| --------------- | ------------------------------------------------------------- | -------------------------------- |
-| Authenticate    | _"Open NotebookLM auth setup"_ or _"Log me in to NotebookLM"_ | Chrome opens for login           |
-| Add notebook    | _"Add [link] to library"_                                     | Saves notebook with metadata     |
-| List notebooks  | _"Show our notebooks"_                                        | Lists all saved notebooks        |
-| Research first  | _"Research this in NotebookLM before coding"_                 | Multi-question session           |
-| Select notebook | _"Use the React notebook"_                                    | Sets active notebook             |
-| Update notebook | _"Update notebook tags"_                                      | Modify metadata                  |
-| Remove notebook | _"Remove [notebook] from library"_                            | Deletes from library             |
-| View browser    | _"Show me the browser"_                                       | Watch live NotebookLM chat       |
-| Fix auth        | _"Repair NotebookLM authentication"_                          | Clears and re-authenticates      |
-| Switch account  | _"Re-authenticate with different Google account"_             | Changes account                  |
-| Clean restart   | _"Run NotebookLM cleanup"_                                    | Removes all data for fresh start |
-| Keep library    | _"Cleanup but keep my library"_                               | Preserves notebooks              |
-| Delete all data | _"Delete all NotebookLM data"_                                | Complete removal                 |
-
----
-
-## Comparison to Alternatives
-
-### vs. Downloading docs locally
-
-- **You**: Download docs → Claude: "search through these files"
-- **Problem**: Claude reads thousands of files → massive token usage, often misses connections
-- **NotebookLM**: Pre-indexed by Gemini, semantic understanding across all docs
-
-### vs. Web search
-
-- **You**: "Research X online"
-- **Problem**: Outdated info, hallucinated examples, unreliable sources
-- **NotebookLM**: Only your trusted docs, always current, with citations
-
-### vs. Local RAG setup
-
-- **You**: Set up embeddings, vector DB, chunking strategy, retrieval pipeline
-- **Problem**: Hours of setup, tuning retrieval, still gets "creative" with gaps
-- **NotebookLM**: Upload docs → done. Google handles everything.
+| 意图       | 说的话                                                        | 结果                     |
+| ---------- | ------------------------------------------------------------- | ------------------------ |
+| 认证       | _"Open NotebookLM auth setup"_ 或 _"Log me in to NotebookLM"_ | Chrome 打开登录窗口      |
+| 添加笔记本 | _"Add [link] to library"_                                     | 保存笔记本并添加元数据   |
+| 列出笔记本 | _"Show our notebooks"_                                        | 列出所有保存的笔记本     |
+| 先研究     | _"Research this in NotebookLM before coding"_                 | 多问题会话               |
+| 选择笔记本 | _"Use the React notebook"_                                    | 设置活动笔记本           |
+| 更新笔记本 | _"Update notebook tags"_                                      | 修改元数据               |
+| 删除笔记本 | _"Remove [notebook] from library"_                            | 从库中删除               |
+| 查看浏览器 | _"Show me the browser"_                                       | 实时观看 NotebookLM 对话 |
+| 修复认证   | _"Repair NotebookLM authentication"_                          | 清除并重新认证           |
+| 切换账户   | _"Re-authenticate with different Google account"_             | 更换账户                 |
+| 清理重启   | _"Run NotebookLM cleanup"_                                    | 删除所有数据，重新开始   |
+| 保留库     | _"Cleanup but keep my library"_                               | 保留笔记本               |
+| 删除所有   | _"Delete all NotebookLM data"_                                | 完全删除                 |
 
 ---
 
-## FAQ
+## 与其他方案对比
 
-**Is it really zero hallucinations?**
-Yes. NotebookLM is specifically designed to only answer from uploaded sources. If it doesn't know, it says so.
+| 方案                      | Token 消耗           | 设置时间            | 幻觉                | 答案质量   |
+| ------------------------- | -------------------- | ------------------- | ------------------- | ---------- |
+| **直接投喂文档给 Claude** | 🔴 很高 (多文件读取) | 立即                | 是 - 填补空白       | 变化的检索 |
+| **网络搜索**              | 🟡 中等              | 立即                | 高 - 不可靠来源     | 看运气     |
+| **本地 RAG**              | 🟡 中-高             | 数小时 (embeddings) | 中等 - 检索空白     | 取决于设置 |
+| **NotebookLM MCP**        | 🟢 最少              | 5 分钟              | **零** - 未知则拒绝 | 专家综合   |
 
-**What about rate limits?**
-Free tier has daily query limits per Google account. Quick account switching supported for continued research.
+### NotebookLM 的优势
 
-**How secure is this?**
-Chrome runs locally. Your credentials never leave your machine. Use a dedicated Google account if concerned.
-
-**Can I see what's happening?**
-Yes! Say _"Show me the browser"_ to watch the live NotebookLM conversation.
-
-**What makes this better than Claude's built-in knowledge?**
-Your docs are always current. No training cutoff. No hallucinations. Perfect for new libraries, internal APIs, or fast-moving projects.
-
----
-
-## Advanced Usage
-
-- 📥 [**Installation Guide**](./docs/installation.md) — Detailed setup instructions
-- 📖 [**Usage Guide**](./docs/usage-guide.md) — Patterns, workflows, tips
-- 🛠️ [**Tool Reference**](./docs/tools.md) — Complete MCP API
-- 🔧 [**Configuration**](./docs/configuration.md) — Environment variables
-- 🐛 [**Troubleshooting**](./docs/troubleshooting.md) — Common issues
+1. **由 Gemini 预处理**：上传一次文档，立即获得专家知识
+2. **自然语言问答**：不仅是检索 — 实际的理解和综合
+3. **多源关联**：连接 50+ 文档之间的信息
+4. **引用支持**：每个答案都包含来源引用
+5. **无需基础设施**：无需向量 DB、embeddings 或分块策略
 
 ---
 
-## The Bottom Line
+## 常见问题
 
-**Without NotebookLM MCP**: Write code → Find it's wrong → Debug hallucinated APIs → Repeat
+**真的零幻觉吗？**
+是的。NotebookLM 专门设计为仅从上传的来源回答。如果不知道，它会直接说不知道。
 
-**With NotebookLM MCP**: Claude researches first → Writes correct code → Ship faster
+**有速率限制吗？**
+免费 tier 每个账户每天有查询次数限制。支持快速切换账户继续研究。
 
-Stop debugging hallucinations. Start shipping accurate code.
+**这有多安全？**
+Chrome 在本地运行。您的凭据永远不会离开您的机器。如果担心，可以使用专用的 Google 账户。
 
-```bash
-# Get started in 30 seconds
-claude mcp add notebooklm npx notebooklm-mcp@latest
-```
+**可以看到正在发生什么吗？**
+可以！说 _"Show me the browser"_ 来实时观看 NotebookLM 对话。
 
----
-
-## Disclaimer
-
-This tool automates browser interactions with NotebookLM to make your workflow more efficient. However, a few friendly reminders:
-
-**About browser automation:**
-While I've built in humanization features (realistic typing speeds, natural delays, mouse movements) to make the automation behave more naturally, I can't guarantee Google won't detect or flag automated usage. I recommend using a dedicated Google account for automation rather than your primary account—think of it like web scraping: probably fine, but better safe than sorry!
-
-**About CLI tools and AI agents:**
-CLI tools like Claude Code, Codex, and similar AI-powered assistants are incredibly powerful, but they can make mistakes. Please use them with care and awareness:
-
-- Always review changes before committing or deploying
-- Test in safe environments first
-- Keep backups of important work
-- Remember: AI agents are assistants, not infallible oracles
-
-I built this tool for myself because I was tired of the copy-paste dance between NotebookLM and my editor. I'm sharing it in the hope it helps others too, but I can't take responsibility for any issues, data loss, or account problems that might occur. Use at your own discretion and judgment.
-
-That said, if you run into problems or have questions, feel free to open an issue on GitHub. I'm happy to help troubleshoot!
+**这比 Claude 内置知识好在哪里？**
+您的文档始终是最新的。没有训练截止。没有幻觉。非常适合新库、内部 API 或快速发展的项目。
 
 ---
 
-## Contributing
+## 许可证
 
-Found a bug? Have a feature idea? [Open an issue](https://github.com/PleasePrompto/notebooklm-mcp/issues) or submit a PR!
-
-## License
-
-MIT — Use freely in your projects.
+MIT — 自由在您的项目中使用。
 
 ---
 
@@ -438,6 +279,8 @@ MIT — Use freely in your projects.
 
 Built with frustration about hallucinated APIs, powered by Google's NotebookLM
 
-⭐ [Star on GitHub](https://github.com/PleasePrompto/notebooklm-mcp) if this saves you debugging time!
+⭐ [在 GitHub 上 Star](https://github.com/PleasePrompto/notebooklm-mcp) 如果这能节省您的调试时间！
+
+[English Version](./README_EN.md) • [报告问题](https://github.com/PleasePrompto/notebooklm-mcp/issues)
 
 </div>

@@ -3,6 +3,7 @@
 **No config files needed!** The server works out of the box with sensible defaults.
 
 ### Configuration Priority (highest to lowest):
+
 1. **Tool Parameters** - Claude passes settings like `browser_options` at runtime
 2. **Environment Variables** - Optional overrides for advanced users
 3. **Hardcoded Defaults** - Sensible defaults that work for most users
@@ -38,6 +39,7 @@ browser_options: {
 ```
 
 **Example usage:**
+
 - "Research this and show me the browser" → Sets `show: true`
 - "Use slow typing for this query" → Adjusts typing WPM via stealth settings
 
@@ -46,6 +48,7 @@ browser_options: {
 ## Environment Variables (Optional)
 
 For advanced users who want to set global defaults:
+
 - Auth
   - `AUTO_LOGIN_ENABLED` — `true|false` (default `false`)
   - `LOGIN_EMAIL`, `LOGIN_PASSWORD` — for auto‑login if enabled
@@ -80,11 +83,13 @@ For advanced users who want to set global defaults:
 ## Storage Paths
 
 The server uses platform-specific paths via [env-paths](https://github.com/sindresorhus/env-paths)
+
 - **Linux**: `~/.local/share/notebooklm-mcp/`
 - **macOS**: `~/Library/Application Support/notebooklm-mcp/`
 - **Windows**: `%LOCALAPPDATA%\notebooklm-mcp\`
 
 **What's stored:**
+
 - `chrome_profile/` - Persistent Chrome browser profile with login session
 - `browser_state/` - Browser context state and cookies
 - `library.json` - Your notebook library with metadata
@@ -92,3 +97,72 @@ The server uses platform-specific paths via [env-paths](https://github.com/sindr
 
 **No config.json file** - Configuration is purely via environment variables or tool parameters!
 
+---
+
+## Configuration Validation
+
+The server includes a built-in configuration validation system that ensures all settings are valid and provides warnings for non-optimal values.
+
+### Validation Features
+
+- **Type Safety** - Runtime validation with Zod schema
+- **Range Checking** - Numeric values validated against min/max bounds
+- **Logical Constraints** - Cross-field validation (e.g., `minDelayMs <= maxDelayMs`)
+- **Health Warnings** - Alerts for non-optimal configurations
+
+### Validation on Startup
+
+When the server starts, it automatically validates all configuration values:
+
+```bash
+$ notebooklm-mcp
+✅ Configuration validated successfully
+ℹ️  Configuration warnings:
+  - maxSessions (75) > 50 may cause performance issues
+```
+
+### Safe Fallback Behavior
+
+Invalid values automatically fall back to safe defaults:
+
+```bash
+# These invalid values are safely rejected:
+BROWSER_TIMEOUT=-100   # Negative → uses default 30000
+MAX_SESSIONS=invalid    # NaN → uses default 10
+TYPING_WPM_MIN=300     # Above max → uses default 160
+```
+
+### Configuration Value Bounds
+
+| Setting                 | Min  | Max    | Default |
+| ----------------------- | ---- | ------ | ------- |
+| `BROWSER_TIMEOUT`       | 1000 | 300000 | 30000   |
+| `MAX_SESSIONS`          | 1    | 100    | 10      |
+| `SESSION_TIMEOUT`       | 60   | 86400  | 900     |
+| `TYPING_WPM_MIN`        | 40   | 200    | 160     |
+| `TYPING_WPM_MAX`        | 40   | 300    | 240     |
+| `MIN_DELAY_MS`          | 0    | 10000  | 100     |
+| `MAX_DELAY_MS`          | 0    | 30000  | 400     |
+| `AUTO_LOGIN_TIMEOUT_MS` | 1000 | 600000 | 120000  |
+| `INSTANCE_TTL_HOURS`    | 1    | 720    | 72      |
+| `INSTANCE_MAX_COUNT`    | 1    | 100    | 20      |
+
+### Logical Constraints
+
+The following logical constraints are enforced:
+
+- `TYPING_WPM_MIN` ≤ `TYPING_WPM_MAX`
+- `MIN_DELAY_MS` ≤ `MAX_DELAY_MS`
+
+### Health Check Warnings
+
+The server will warn you about potentially problematic configurations:
+
+| Condition                                    | Warning                         |
+| -------------------------------------------- | ------------------------------- |
+| `maxSessions > 50`                           | May cause performance issues    |
+| `browserTimeout > 120s`                      | May cause slow responses        |
+| `stealthEnabled = false`                     | Increased detection risk        |
+| `sessionTimeout < 300s`                      | Sessions may expire too quickly |
+| `instanceProfileMaxCount > 50`               | May use significant disk space  |
+| `autoLoginEnabled = true` but no credentials | Auto-login won't work           |
