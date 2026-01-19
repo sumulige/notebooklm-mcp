@@ -1,14 +1,14 @@
 <div align="center">
 
-# NotebookLM MCP 服务器
+# Sumulige NotebookLM MCP 服务器
 
 **让您的 AI 代理直接与 NotebookLM 对话，获得基于您文档的准确答案**
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![MCP](https://img.shields.io/badge/MCP-2025-green.svg)](https://modelcontextprotocol.io/)
-[![npm](https://img.shields.io/npm/v/notebooklm-mcp.svg)](https://www.npmjs.com/package/notebooklm-mcp)
-[![Claude Code Skill](https://img.shields.io/badge/Claude%20Code-Skill-purple.svg)](https://github.com/PleasePrompto/notebooklm-skill)
-[![GitHub](https://img.shields.io/github/stars/PleasePrompto/notebooklm-mcp?style=social)](https://github.com/PleasePrompto/notebooklm-mcp)
+[![npm](https://img.shields.io/npm/v/sumulige-notebooklm-mcp.svg)](https://www.npmjs.com/package/sumulige-notebooklm-mcp)
+[![Claude Code Skill](https://img.shields.io/badge/Claude%20Code-Skill-purple.svg)](https://github.com/sumulige/sumulige-notebooklm-mcp)
+[![GitHub](https://img.shields.io/github/stars/sumulige/sumulige-notebooklm-mcp?style=social)](https://github.com/sumulige/sumulige-notebooklm-mcp)
 
 </div>
 
@@ -96,7 +96,7 @@ graph LR
 
 **Claude Code:**
 ```bash
-claude mcp add notebooklm npx notebooklm-mcp@latest
+claude mcp add notebooklm npx sumulige-notebooklm-mcp@latest
 ```
 
 **Cursor:** 编辑 `~/.cursor/mcp.json`，添加：
@@ -105,7 +105,7 @@ claude mcp add notebooklm npx notebooklm-mcp@latest
   "mcpServers": {
     "notebooklm": {
       "command": "npx",
-      "args": ["-y", "notebooklm-mcp@latest"]
+      "args": ["-y", "sumulige-notebooklm-mcp@latest"]
     }
   }
 }
@@ -206,7 +206,7 @@ AI → NotebookLM: "这个库的核心概念是什么？"
 
 ```bash
 # 安装
-claude mcp add notebooklm npx notebooklm-mcp@latest
+claude mcp add notebooklm npx sumulige-notebooklm-mcp@latest
 
 # 验证
 claude mcp list
@@ -227,7 +227,7 @@ claude mcp remove notebooklm
   "mcpServers": {
     "notebooklm": {
       "command": "npx",
-      "args": ["-y", "notebooklm-mcp@latest"]
+      "args": ["-y", "sumulige-notebooklm-mcp@latest"]
     }
   }
 }
@@ -242,7 +242,7 @@ claude mcp remove notebooklm
 
 ```bash
 # 安装
-codex mcp add notebooklm -- npx notebooklm-mcp@latest
+codex mcp add notebooklm -- npx sumulige-notebooklm-mcp@latest
 
 # 验证
 codex mcp list
@@ -258,12 +258,12 @@ codex mcp remove notebooklm
 
 **Gemini:**
 ```bash
-gemini mcp add notebooklm npx notebooklm-mcp@latest
+gemini mcp add notebooklm npx sumulige-notebooklm-mcp@latest
 ```
 
 **VS Code:**
 ```bash
-code --add-mcp '{"name":"notebooklm","command":"npx","args":["notebooklm-mcp@latest"]}'
+code --add-mcp '{"name":"notebooklm","command":"npx","args":["sumulige-notebooklm-mcp@latest"]}'
 ```
 
 **通用配置格式:**
@@ -272,7 +272,7 @@ code --add-mcp '{"name":"notebooklm","command":"npx","args":["notebooklm-mcp@lat
   "mcpServers": {
     "notebooklm": {
       "command": "npx",
-      "args": ["notebooklm-mcp@latest"]
+      "args": ["sumulige-notebooklm-mcp@latest"]
     }
   }
 }
@@ -357,7 +357,7 @@ code --add-mcp '{"name":"notebooklm","command":"npx","args":["notebooklm-mcp@lat
 export NOTEBOOKLM_PROFILE=minimal
 
 # CLI
-npx notebooklm-mcp@latest --profile minimal
+npx sumulige-notebooklm-mcp@latest --profile minimal
 ```
 
 </details>
@@ -453,8 +453,8 @@ Chrome 在本地运行。您的凭据永远不会离开您的机器。如果担�
 
 Built with frustration about hallucinated APIs, powered by Google's NotebookLM
 
-⭐ [在 GitHub 上 Star](https://github.com/PleasePrompto/notebooklm-mcp) 如果这能节省您的调试时间！
+⭐ [在 GitHub 上 Star](https://github.com/sumulige/sumulige-notebooklm-mcp) 如果这能节省您的调试时间！
 
-[English Version](./README_EN.md) • [报告问题](https://github.com/PleasePrompto/notebooklm-mcp/issues)
+[English Version](./README_EN.md) • [报告问题](https://github.com/sumulige/sumulige-notebooklm-mcp/issues)
 
 </div>

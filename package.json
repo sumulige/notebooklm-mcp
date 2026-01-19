@@ -1,10 +1,10 @@
 {
-  "name": "notebooklm-mcp",
+  "name": "sumulige-notebooklm-mcp",
   "version": "1.2.1",
   "description": "MCP server for NotebookLM API with session support and human-like behavior",
   "type": "module",
   "bin": {
-    "notebooklm-mcp": "dist/index.js"
+    "sumulige-notebooklm-mcp": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -12,24 +12,27 @@
     "watch": "tsc --watch",
     "dev": "tsx watch src/index.ts",
     "prepare": "npm run build",
-    "test": "tsx src/index.ts"
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [
     "mcp",
     "notebooklm",
     "gemini",
     "ai",
-    "claude"
+    "claude",
+    "sumulige"
   ],
-  "author": "Gérôme Dexheimer <hello@geromedexheimer.de> (https://github.com/PleasePrompto)",
+  "author": "sumulige",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/PleasePrompto/notebooklm-mcp.git"
+    "url": "git+https://github.com/sumulige/sumulige-notebooklm-mcp.git"
   },
-  "homepage": "https://github.com/PleasePrompto/notebooklm-mcp#readme",
+  "homepage": "https://github.com/sumulige/sumulige-notebooklm-mcp#readme",
   "bugs": {
-    "url": "https://github.com/PleasePrompto/notebooklm-mcp/issues"
+    "url": "https://github.com/sumulige/sumulige-notebooklm-mcp/issues"
   },
   "files": [
     "dist",
@@ -48,8 +51,10 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
+    "@vitest/coverage-v8": "^4.0.17",
     "tsx": "^4.7.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^4.0.17"
   },
   "engines": {
     "node": ">=18.0.0"

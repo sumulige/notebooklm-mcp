@@ -14,6 +14,12 @@
   - Switch to a different Google account or re-authenticate.
   - Use when NotebookLM rate limit is reached (50 queries/day for free accounts).
   - Closes all sessions, clears auth data, and opens browser for fresh login.
+- `cleanup_data`
+  - Parameters: `confirm` (boolean, required), optional `preserve_library`.
+  - Deep cleanup tool that scans all NotebookLM MCP data files across 8 categories.
+  - Shows categorized preview before deletion, requires explicit confirmation.
+  - Use `preserve_library=true` to keep your notebook library while cleaning everything else.
+  - Categories: Legacy installation, current data, NPM cache, logs, backups, project cache, editor logs, trash.
 
 ### Notebook library
 - `add_notebook` – Safe conversational add; expects confirmation before writing.
